@@ -1,0 +1,39 @@
+Genotyping is the process of determining differences in the genetic make-up (genotype) of an individual by examining the individual's
+DNA sequence using biological assays and comparing it to another individual's sequence or a reference sequence. It reveals the alleles
+an individual has inherited from their parents.[1] Traditionally genotyping is the use of DNA sequences to define biological populations
+by use of molecular tools. It does not usually involve defining the genes of an individual.
+
+Current methods of genotyping include restriction fragment length polymorphism identification (RFLPI) of genomic DNA, random amplified
+polymorphic detection (RAPD) of genomic DNA, amplified fragment length polymorphism detection (AFLPD), polymerase chain reaction (PCR),
+DNA sequencing, allele specific oligonucleotide (ASO) probes, and hybridization to DNA microarrays or beads. Genotyping is important in
+research of genes and gene variants associated with disease. Due to current technological limitations, almost all genotyping is partial.
+That is, only a small fraction of an individual's genotype is determined, such as with RADseq. New [2] mass-sequencing technologies promise
+to provide whole-genome genotyping (or whole genome sequencing) in the future.
+
+Genotyping applies to a broad range of individuals, including microorganisms. For example, viruses and bacteria can be genotyped.
+Genotyping in this context may help in controlling the spreading of pathogens, by tracing the origin of outbreaks. This area is often
+referred to as molecular epidemiology or forensic microbiology.
+
+Humans can also be genotyped. For example, when testing fatherhood or motherhood, scientists typically only need to examine 10 or 20 genomic
+regions (like single-nucleotide polymorphism (SNPs)). That is a tiny fraction of the human genome, which consists of three billion or so nucleotides.
+
+When genotyping transgenic organisms, a single genomic region may be all that needs to be examined to determine the genotype.
+A single PCR assay is typically enough to genotype a transgenic mouse; the mouse is the mammalian model of choice for much of
+medical research today.
+
+A phenotype (from Greek phainein, meaning "to show", and typos, meaning "type") is the composite of an organism's observable characteristics
+or traits, such as its morphology, development, biochemical or physiological properties, phenology, behavior, and products of behavior
+(such as a bird's nest). Richard Dawkins in 1978 and then again in 1982 suggested that bird nests and other built structure such as caddis
+fly larvae cases and beaver dams are "extended phenotypes". A phenotype results from the expression of an organism's genes as well as the
+influence of environmental factors and the interactions between the two. When two or more clearly different phenotypes exist in the same
+population of a species, the species is called polymorph.
+
+The genotype of an organism is the inherited instructions it carries within its genome. Not all organisms with the same genotype
+look or act the same way because appearance and behavior are modified by environmental and developmental conditions. Likewise, not all
+organisms that look alike necessarily have the same genotype.
+
+This genotype-phenotype distinction was proposed by Wilhelm Johannsen in 1911 to make clear the difference between an organism's heredity
+and what that heredity produces. The distinction is similar to that proposed by August Weismann, who distinguished between germ plasm
+(heredity) and somatic cells (the body). The genotype-phenotype distinction should not be confused with Francis Crick's central dogma
+of molecular biology, which is a statement about the directionality of molecular sequential information flowing from DNA to protein,
+and not the reverse.
