@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.vinicius.synctexteditor.EditionActivity">
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_new"
+        android:icon="@drawable/ic_action_new"
+        android:title="@string/action_new"
+        app:showAsAction="always" />
+    <!-- app:showAsAction="ifRoom" -->
+    <item android:id="@+id/action_save"
+        android:icon="@drawable/ic_action_save"
+        android:title="@string/action_save"
+        app:showAsAction="always" />
+    <item android:id="@+id/action_open"
+        android:icon="@drawable/ic_action_read"
+        android:title="@string/action_open"
+        app:showAsAction="always" />
+    <item android:id="@+id/action_transfer"
+        android:icon="@drawable/ic_action_forward"
+        android:title="@string/action_transfer"
+        app:showAsAction="always" />
+</menu>

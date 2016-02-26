@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">TCPTest</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="title_activity_server">Server</string>
+    <string name="title_activity_client">Client</string>
+
+    <string name="server">Server</string>
+    <string name="client">Client</string>
+    <string name="waiting">Waiting connections ...</string>
+    <string name="edit_message">Enter a message</string>
+    <string name="server_ip">Enter the server IP address</string>
+    <string name="server_port">Enter the server port</string>
+    <string name="button_send">Send</string>
+</resources>

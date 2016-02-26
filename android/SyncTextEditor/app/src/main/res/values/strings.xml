@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">SyncTextEditor</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="action_new">New</string>
+    <string name="action_save">Save</string>
+    <string name="action_open">Open</string>
+    <string name="action_transfer">Transfer</string>
+
+    <string name="title_activity_edition">EditionActivity</string>
+
+    <string name="local_port">Local port</string>
+    <string name="remote_port">Remote port</string>
+    <string name="remote_ip">Remote IP</string>
+    <string name="type_text">Type your text here</string>
+    <string name="button_connect">Connect</string>
+    <string name="button_offline">Start offline</string>
+    <string name="file_name">new file name</string>
+</resources>
