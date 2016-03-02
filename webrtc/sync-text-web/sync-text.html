@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Sync Text Editor</title> 
+    </head>
+
+    <body>
+        <textarea id="textarea" rows="10" cols="50"></textarea>
+        <br>
+        Current work file:
+        <br>
+        <input type="file" id="currentFile" onchange="openFile(event)">
+        <br>
+        <input type="button" id="saveButton" onclick="saveFile()" value="Save file">
+        <br>
+        <input type="button" id="transferButton" onclick="transfer()" value="Transfer">
+        <br>
+        <br>
+        <input type="button" id="call" onclick="start(true)" value="Start connection">
+
+        <script src = "client.js"></script>
+        
+    </body>
+
+</html>
