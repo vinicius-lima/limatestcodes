@@ -23,9 +23,14 @@ public class StateManager {
 	private ValueEventListener mConnectedListener;
 	private ValueEventListener mListener;
 	
+	private Firebase ackFirebaseRef;
+	private ValueEventListener ackListener;
+	private final LatencyStatus latencyStatus;
+	
 	public StateManager(EditionPanel editionPanel) {
 		this.editionPanel = editionPanel;
 		user_name = null;
+		latencyStatus = new LatencyStatus();
 	}
 	
 	public void startStateManager(String user_name) {
@@ -33,6 +38,7 @@ public class StateManager {
 		
 		// Connect to Firebase service.
         mFirebaseRef = new Firebase(FIREBASE_URL).child("synctext/" + this.user_name);
+        ackFirebaseRef = new Firebase(FIREBASE_URL).child("synctext/ack");
 
         // Check if our app is connected.
         mConnectedListener = mFirebaseRef.getRoot().child(".info/connected").addValueEventListener(new ValueEventListener() {
@@ -68,11 +74,28 @@ public class StateManager {
                 System.out.println("Could not retrieve data");
             }
         });
+        ackListener = ackFirebaseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long time = (long)dataSnapshot.getValue();
+                if (time != 0L) {
+                    latencyStatus.setFinalTime(System.currentTimeMillis());
+                    System.out.println("Latency = " + latencyStatus.getDifference());
+                    latencyStatus.clear();
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("Could not retrieve ACK");
+            }
+        });
 	}
 	
 	public void cleanUp() {
 		mFirebaseRef.getRoot().child(".info/connected").removeEventListener(mConnectedListener);
 		mFirebaseRef.removeEventListener(mListener);
+		ackFirebaseRef.removeEventListener(ackListener);
 	}
 	
 	public void transferState() {
@@ -80,6 +103,8 @@ public class StateManager {
         DataDescription dataDescription = new DataDescription("save.txt", data.length, DatatypeConverter.printBase64Binary(data));
         
         final CountDownLatch done = new CountDownLatch(1);
+        latencyStatus.setInitialTime(System.currentTimeMillis());
+        System.out.println("Sending state...");
         mFirebaseRef.setValue(dataDescription, new CompletionListener() {
 			
 			@Override

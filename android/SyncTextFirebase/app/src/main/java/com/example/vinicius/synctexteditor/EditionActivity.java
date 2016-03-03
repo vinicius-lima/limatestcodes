@@ -40,6 +40,9 @@ public class EditionActivity extends ActionBarActivity {
     private ValueEventListener mConnectedListener;
     private ValueEventListener mListener;
 
+    private Firebase ackFirebaseRef;
+    //private ValueEventListener ackListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,6 +119,7 @@ public class EditionActivity extends ActionBarActivity {
     public void connect() {
         // Connect to Firebase service.
         mFirebaseRef = new Firebase(ConnectionActivity.FIREBASE_URL).child("synctext/" + user_name);
+        ackFirebaseRef = new Firebase(ConnectionActivity.FIREBASE_URL).child("synctext/ack");
 
         // Check if our app is connected.
         mConnectedListener = mFirebaseRef.getRoot().child(".info/connected").addValueEventListener(new ValueEventListener() {
@@ -144,6 +148,7 @@ public class EditionActivity extends ActionBarActivity {
                     EditText user_text = (EditText) findViewById(R.id.user_text);
                     String text = new String(Base64.decode(dataDescription.getData64Encoded(), Base64.DEFAULT));
                     user_text.setText(text);
+                    ackFirebaseRef.setValue(System.currentTimeMillis());
                 }
             }
 
