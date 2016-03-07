@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    tools:context="com.example.vinicius.synctexteditor.EditionActivity">
+    tools:context="com.example.vinicius.synctextfirebase.EditionActivity">
 
     <EditText
         android:id="@+id/new_file_name"

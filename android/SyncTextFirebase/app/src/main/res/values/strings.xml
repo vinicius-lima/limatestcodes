@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SyncTextEditor</string>
+    <string name="app_name">SyncTextFirebase</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_new">New</string>
