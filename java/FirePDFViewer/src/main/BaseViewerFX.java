@@ -57,12 +57,12 @@ import org.jpedal.objects.PdfPageData;
 import org.jpedal.parser.DecoderOptions;
 
 public class BaseViewerFX extends Application {
-	   
+
 	private final org.jpedal.PdfDecoderFX pdf = new org.jpedal.PdfDecoderFX();
-	
+
 	PluginHandler customPluginHandle;
-	
-	 /**
+
+	/**
 	 * Enum to control how we fit the content to the page.
 	 * 
 	 * AUTO will automatically fit the content to the stage depending on its orientation
@@ -72,54 +72,54 @@ public class BaseViewerFX extends Application {
 	public enum FitToPage{
 		AUTO, WIDTH, HEIGHT, NONE
 	}
-	
+
 	String PDFfile;
-	
+
 	//Variable to hold the current file/directory
 	File file;
-	
+
 	//These two variables are todo with PDF encryption & passwords
 	private String password; //Holds the password from the JVM or from User input
 	private boolean closePasswordPrompt; //boolean controls whether or not we should close the prompt box
-	
-	
+
+
 	// Layout panes
 	private VBox top;
 	private HBox bottom;
 	private ScrollPane center;
 	//Group is a container which holds the decoded PDF content
 	private Group group;
-	
+
 	// for the location of the pdf file
 	private Text fileLoc;
-	
+
 	private float scale = 1.0f;
-	
+
 	private final float[] scalings = {0.01f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 4.0f, 7.5f, 10.0f};
-	
+
 	private int currentScaling=5;
-	
+
 	private static final float insetX = 25;
-	
+
 	private static final float insetY = 25;
-	
+
 	private int currentPage = 1;
-	
+
 	Stage stage;
-	
+
 	Scene scene;
-	
+
 	//Controls size of the stage, in theory setting this to a higher value will
 	//increase image quality as there's more pixels due to higher image resolutions
 	static final int FXscaling=1;
-	
+
 	FitToPage zoomMode = FitToPage.AUTO;
-	
+
 	private TransitionType transitionType = TransitionType.None;
-	
+
 	// TODO: Manager to monitor execution state transferences.
 	private TransferManager manager;
-	
+
 	public static void main(final String[] args){
 		DecoderOptions.javaVersion = Float.parseFloat(System.getProperty("java.specification.version"));
 		System.out.println("JAVA VERSION : "+ DecoderOptions.javaVersion);
@@ -128,7 +128,7 @@ public class BaseViewerFX extends Application {
 		}
 		launch(args);
 	}
-	
+
 	/**
 	 * launches BaseViewerFX viewer using supplied stage for displaying PDF files
 	 * 
@@ -137,7 +137,7 @@ public class BaseViewerFX extends Application {
 	@Override
 	public void start(final Stage stage){
 		stage.setTitle("Base Viewer FX - " + PdfDecoderFX.version);
-		
+
 		// Set transition if set in properites:
 		String trans = System.getProperty("org.jpedal.fxtransition");
 		if(trans != null){
@@ -145,19 +145,19 @@ public class BaseViewerFX extends Application {
 			trans = trans.substring(0, 1).toUpperCase() + trans.substring(1).toLowerCase();
 			transitionType = TransitionType.valueOf(trans);
 		}
-		
+
 		// Set page if set in JVM flag
 		final String pageNum = System.getProperty("org.jpedal.page");
 		if(pageNum != null){
 			currentPage = Integer.parseInt(pageNum);
 		}
-		
+
 		this.stage=stage;
 		scene=setupViewer(800,600);
-		
+
 		// Get command line arguments
 		final List<String> args = this.getParameters().getUnnamed();
-		
+
 		/**
 		 * setup initial display
 		 * Setting this before loadPDF() gives access to the toolbar buttons 
@@ -165,7 +165,7 @@ public class BaseViewerFX extends Application {
 		 */
 		stage.setScene(scene);
 		stage.show();
-		
+
 		// this.getParameters().getUnamed() will never be null according to FX Javadoc, so no null check needed
 		// http://docs.oracle.com/javafx/2/api/javafx/application/Application.Parameters.html#getUnnamed%28%29
 		if(args.size() == 1){
@@ -183,13 +183,13 @@ public class BaseViewerFX extends Application {
 				}
 			});
 		}
-		    
+
 		addListeners();
-		
+
 		//TODO: Add communication initialization.
 		manager = new TransferManager("PDFViewerUser", this);
 	}
-	
+
 	/**
 	 * creates all the components and adds change listeners for auto-centering 
 	 * for JavaFX PDF viewer
@@ -199,74 +199,74 @@ public class BaseViewerFX extends Application {
 	 * @return scene
 	 */
 	public Scene setupViewer(final int w, final int h){
-	
+
 		/* 
 		 * Setting up layout panes and assigning them to the appropiate locations
 		 */
 		final BorderPane root = new BorderPane();
-		
+
 		top = new VBox();
-		
+
 		root.setTop(top);
-		
+
 		top.getChildren().add(setupToolBar());
-		
+
 		bottom = new HBox();
 		bottom.setPadding(new Insets(0,10,0,10));
 		root.setBottom(bottom);
-		
+
 		center = new ScrollPane();
 		center.setPannable(true);
 		center.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 		center.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-		
+
 		//needs to be added via group so resizes (see http://pixelduke.wordpress.com/2012/09/16/zooming-inside-a-scrollpane/)
 		group=new Group();
 		group.getChildren().add(pdf);
 		center.setContent(group);
 		root.setCenter(center);
-		
+
 		center.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
-		    @Override
-		    public void changed(final ObservableValue<? extends Bounds> ov, final Bounds ob, final Bounds nb) {
-		        adjustPagePosition(nb);
-		    }
+			@Override
+			public void changed(final ObservableValue<? extends Bounds> ov, final Bounds ob, final Bounds nb) {
+				adjustPagePosition(nb);
+			}
 		});
-		
+
 		/**Sets the text to be displayed at the bottom of the FX Viewer**/
 		fileLoc = new Text("No PDF Selected");
 		fileLoc.setId("file_location");
-	    bottom.getChildren().add(fileLoc);
-	    
-	    scene=new Scene(root, w*FXscaling, h*FXscaling);
-	    
-	    return scene;
+		bottom.getChildren().add(fileLoc);
+
+		scene=new Scene(root, w*FXscaling, h*FXscaling);
+
+		return scene;
 	}
-	
+
 	public void addListeners(){
 		/**
 		 * auto adjust so dynamically resized as viewer width alters
 		 */
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
-	
-		    @Override
-		    public void changed(final ObservableValue<? extends Number> observableValue,
-		    		final Number oldSceneWidth, final Number newSceneWidth) {
-		
-		        fitToX(zoomMode);
-		
-		    }
+
+			@Override
+			public void changed(final ObservableValue<? extends Number> observableValue,
+					final Number oldSceneWidth, final Number newSceneWidth) {
+
+				fitToX(zoomMode);
+
+			}
 		});
-		
+
 		scene.heightProperty().addListener(new ChangeListener<Number>() {
-		    @Override
-		    public void changed(final ObservableValue<? extends Number> observableValue,
-		    		final Number oldSceneHeight, final Number newSceneHeight) {
-		    	
-		        fitToX(zoomMode);
-		    }
+			@Override
+			public void changed(final ObservableValue<? extends Number> observableValue,
+					final Number oldSceneHeight, final Number newSceneHeight) {
+
+				fitToX(zoomMode);
+			}
 		});
-		
+
 		/**
 		 * Controls for dragging a PDF into the scene
 		 * Using the dragboard, which extends the clipboard class, 
@@ -274,40 +274,40 @@ public class BaseViewerFX extends Application {
 		 * we load it.
 		 */
 		scene.setOnDragOver(new EventHandler<DragEvent>() {
-		    @Override
-		    public void handle(final DragEvent event) {
-		        final Dragboard db = event.getDragboard();
-		        if (db.hasFiles()) {
-		            event.acceptTransferModes(TransferMode.COPY);
-		        }
-		        else {
-		            event.consume();
-		        }
-		    }
+			@Override
+			public void handle(final DragEvent event) {
+				final Dragboard db = event.getDragboard();
+				if (db.hasFiles()) {
+					event.acceptTransferModes(TransferMode.COPY);
+				}
+				else {
+					event.consume();
+				}
+			}
 		});
-		
+
 		scene.setOnDragDropped(new EventHandler<DragEvent>() {        
-		    @Override
-		    public void handle(final DragEvent event) {
-		        final Dragboard db = event.getDragboard();
-		        boolean success = false;
-		        if(db.hasFiles()){
-		            success = true;
-		            // Only get the first file from the list
-	                file = db.getFiles().get(0);
-	                Platform.runLater(new Runnable() {
-	                    @Override
-	                    public void run() {
-	                        loadPDF(file);
-	                    }
-	                });
-	            }
-	            event.setDropCompleted(success);
-	            event.consume();
-		    }
-	    });
+			@Override
+			public void handle(final DragEvent event) {
+				final Dragboard db = event.getDragboard();
+				boolean success = false;
+				if(db.hasFiles()){
+					success = true;
+					// Only get the first file from the list
+					file = db.getFiles().get(0);
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							loadPDF(file);
+						}
+					});
+				}
+				event.setDropCompleted(success);
+				event.consume();
+			}
+		});
 	}
-	
+
 	/**
 	 * Sets up a MenuBar to be used at the top of the window.
 	 * 
@@ -316,10 +316,10 @@ public class BaseViewerFX extends Application {
 	 * @return 
 	 */
 	private ToolBar setupToolBar() {
-	
-	    final ToolBar toolbar = new ToolBar();
-	
-	    final Button open = new Button("Open");
+
+		final ToolBar toolbar = new ToolBar();
+
+		final Button open = new Button("Open");
 		final Button back = new Button("Back");
 		final ComboBox<String> pages = new ComboBox<String>();
 		final Label pageCount = new Label();
@@ -329,14 +329,14 @@ public class BaseViewerFX extends Application {
 		final Button fitWidth = new Button("Fit to Width");
 		final Button fitHeight = new Button("Fit to Height");
 		final Button fitPage = new Button("Fit to Page");
-		
+
 		// TODO: Adding triggers to send state and to halt execution.
 		final Button transfer = new Button("Transfer");
 		final Button quit = new Button("Quit");
-		  
-	    ComboBox<String> transitionList = new ComboBox<String>();
-	
-	    open.setId("open");
+
+		ComboBox<String> transitionList = new ComboBox<String>();
+
+		open.setId("open");
 		back.setId("back");
 		pageCount.setId("pgCount");
 		pages.setId("pages");
@@ -346,7 +346,7 @@ public class BaseViewerFX extends Application {
 		fitWidth.setId("fitWidth");
 		fitHeight.setId("fitHeight");
 		fitPage.setId("fitPage");
-		
+
 		/**
 		 * Open the PDF File
 		 */
@@ -355,7 +355,7 @@ public class BaseViewerFX extends Application {
 			public void handle(final ActionEvent t) {
 				final FileChooser chooser = new FileChooser();
 				chooser.setTitle("Open PDF file");
-				
+
 				//Open directory from existing directory
 				if(file != null){
 					final File existDirectory = file.getParentFile();
@@ -363,13 +363,13 @@ public class BaseViewerFX extends Application {
 						chooser.setInitialDirectory(existDirectory);
 					}
 				}
-				
+
 				//Set extension filter
 				final FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf");
 				chooser.getExtensionFilters().add(extFilter);
-				
+
 				file = chooser.showOpenDialog(null);
-				
+
 				if(file != null){
 					Platform.runLater(new Runnable() {
 						@Override
@@ -380,124 +380,124 @@ public class BaseViewerFX extends Application {
 				}
 			}
 		});
-		
+
 		pages.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-		    @Override public void changed(final ObservableValue<? extends Number> ov, final Number oldVal, final Number newVal) {
-		        if(newVal.intValue() != -1 && newVal.intValue()+1 != currentPage){
-		            final int newPage = newVal.intValue() + 1;
-		            goToPage(newPage);
-		        }
-		    }
+			@Override public void changed(final ObservableValue<? extends Number> ov, final Number oldVal, final Number newVal) {
+				if(newVal.intValue() != -1 && newVal.intValue()+1 != currentPage){
+					final int newPage = newVal.intValue() + 1;
+					goToPage(newPage);
+				}
+			}
 		});
-		
+
 		// Navigate backward
 		back.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        if (currentPage > 1) {
-		            goToPage(currentPage - 1);
-		        }
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				if (currentPage > 1) {
+					goToPage(currentPage - 1);
+				}
+			}
 		});
-		
+
 		// Navigate forward
 		forward.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        if (currentPage < pdf.getPageCount()) {
-		            goToPage(currentPage + 1);
-		        }
-		    }
+			@Override
+			public void handle(final ActionEvent t) {
+				if (currentPage < pdf.getPageCount()) {
+					goToPage(currentPage + 1);
+				}
+			}
 		});
-		
+
 		// Zoom in
 		zoomIn.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        zoomMode = FitToPage.NONE;
-		        
-		        if (currentScaling < scalings.length - 1) {
-		
-		            currentScaling = findClosestIndex(scale, scalings);
-		
-		            if (scale >= scalings[findClosestIndex(scale, scalings)]) {
-		
-		                currentScaling++;
-		
-		            }
-		
-		            scale = scalings[currentScaling];
-		
-		        }
-		
-		        pdf.setPageParameters(scale, currentPage);
-		        adjustPagePosition(center.getViewportBounds());
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				zoomMode = FitToPage.NONE;
+
+				if (currentScaling < scalings.length - 1) {
+
+					currentScaling = findClosestIndex(scale, scalings);
+
+					if (scale >= scalings[findClosestIndex(scale, scalings)]) {
+
+						currentScaling++;
+
+					}
+
+					scale = scalings[currentScaling];
+
+				}
+
+				pdf.setPageParameters(scale, currentPage);
+				adjustPagePosition(center.getViewportBounds());
+			}
 		});
-		
+
 		// Zoom out
 		zoomOut.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        zoomMode = FitToPage.NONE;
-		
-		        if (currentScaling > 0) {
-		
-		            currentScaling = findClosestIndex(scale, scalings);
-		
-		            if (scale <= scalings[findClosestIndex(scale, scalings)]) {
-		
-		                currentScaling--;
-		
-		            }
-		
-		            scale = scalings[currentScaling];
-		
-		        }
-		
-		        pdf.setPageParameters(scale, currentPage);
-		        adjustPagePosition(center.getViewportBounds());
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				zoomMode = FitToPage.NONE;
+
+				if (currentScaling > 0) {
+
+					currentScaling = findClosestIndex(scale, scalings);
+
+					if (scale <= scalings[findClosestIndex(scale, scalings)]) {
+
+						currentScaling--;
+
+					}
+
+					scale = scalings[currentScaling];
+
+				}
+
+				pdf.setPageParameters(scale, currentPage);
+				adjustPagePosition(center.getViewportBounds());
+			}
 		});
-		
+
 		// Fit to width
 		fitWidth.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        zoomMode = FitToPage.WIDTH;
-		        fitToX(FitToPage.WIDTH);    
-		
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				zoomMode = FitToPage.WIDTH;
+				fitToX(FitToPage.WIDTH);    
+
+			}
 		});
-		
+
 		// Fit to height
 		fitHeight.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        zoomMode = FitToPage.HEIGHT;
-		        fitToX(FitToPage.HEIGHT);
-		
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				zoomMode = FitToPage.HEIGHT;
+				fitToX(FitToPage.HEIGHT);
+
+			}
 		});
-		
+
 		// Fit to Page
 		fitPage.setOnAction(new EventHandler<ActionEvent>() {
-		
-		    @Override
-		    public void handle(final ActionEvent t) {
-		        zoomMode = FitToPage.AUTO;
-		        fitToX(FitToPage.AUTO);
-		    }
+
+			@Override
+			public void handle(final ActionEvent t) {
+				zoomMode = FitToPage.AUTO;
+				fitToX(FitToPage.AUTO);
+			}
 		});
-		
+
 		// TODO: Transfer control to a remote application.
 		transfer.setOnAction(new EventHandler<ActionEvent>() {
-			
+
 			@Override
 			public void handle(final ActionEvent t) {
 				TransferWrapper wrapper = new TransferWrapper(PDFfile, scale, currentScaling, currentPage,
@@ -505,123 +505,123 @@ public class BaseViewerFX extends Application {
 				manager.transfer(wrapper);
 			}
 		});
-		
+
 		quit.setOnAction(new EventHandler<ActionEvent>() {
-			
+
 			@Override
 			public void handle(final ActionEvent t) {
 				manager.cleanUp();
 				System.exit(0);
 			}
 		});
-		
+
 		final Region spacerLeft = new Region();
 		final Region spacerRight = new Region();
 		HBox.setHgrow(spacerLeft, Priority.ALWAYS);
 		HBox.setHgrow(spacerRight, Priority.ALWAYS);
-		
+
 		// Set up the ComboBox for transitions
 		final ObservableList<String> options = FXCollections.observableArrayList();
-		
+
 		for(final TransitionType transition : TransitionType.values()){
-		    options.add(transition.name());
+			options.add(transition.name());
 		}
-		
+
 		if(!options.isEmpty()){
-		    transitionList = new ComboBox<String>(options);
-		    // Put before setValue so that setValue triggers the event
-	        transitionList.valueProperty().addListener(new ChangeListener<String>(){
-	            @Override
-	            public void changed(final ObservableValue<? extends String> ov,
-	            		final String oldVal, final String newVal) {
-	            	
-	                transitionType = TransitionType.valueOf(newVal);
-	            }
-	        });
-	        transitionList.setValue(options.get(transitionType.ordinal()));
-	    }
-	    
-	    toolbar.getItems().addAll(open, spacerLeft, back, pages, pageCount, forward,
-	    		zoomIn, zoomOut, transfer, quit, spacerRight, transitionList);
-	    
-	    return toolbar;
+			transitionList = new ComboBox<String>(options);
+			// Put before setValue so that setValue triggers the event
+			transitionList.valueProperty().addListener(new ChangeListener<String>(){
+				@Override
+				public void changed(final ObservableValue<? extends String> ov,
+						final String oldVal, final String newVal) {
+
+					transitionType = TransitionType.valueOf(newVal);
+				}
+			});
+			transitionList.setValue(options.get(transitionType.ordinal()));
+		}
+
+		toolbar.getItems().addAll(open, spacerLeft, back, pages, pageCount, forward,
+				zoomIn, zoomOut, transfer, quit, spacerRight, transitionList);
+
+		return toolbar;
 	}
-	
+
 	/**
 	 * take a File handle to PDF file on local filesystem and displays in PDF viewer
 	 * 
 	 * @param input  The PDF file to load in the viewer 
 	 */
 	public void loadPDF(final File input){
-	    if(input == null) {
-	        return;
-	    }
+		if(input == null) {
+			return;
+		}
 
-	    scale = 1; //reset to default for new page
+		scale = 1; //reset to default for new page
 
-	    PDFfile=input.getAbsolutePath();
-	    fileLoc.setText(PDFfile);
+		PDFfile=input.getAbsolutePath();
+		fileLoc.setText(PDFfile);
 
-	    openFile(input,null,false);   
+		openFile(input,null,false);   
 	}
-	
+
 	/**
 	 * take a File handle to PDF file on local filesystem and displays in PDF viewer
 	 * 
 	 * @param input The PDF file to load in the viewer  
 	 */
 	public void loadPDF(final String input){
-	    
-	if(input == null) {
-	    return;
+
+		if(input == null) {
+			return;
+		}
+
+		scale = 1; //reset to default for new page
+		PDFfile=input;
+		fileLoc.setText(PDFfile);
+
+		if(input.startsWith("http")){
+			openFile(null, input,true);
+		}else{
+			openFile(new File(input),null,false);
+		}
+
 	}
-	
-	scale = 1; //reset to default for new page
-	PDFfile=input;
-	fileLoc.setText(PDFfile);
-	   
-	if(input.startsWith("http")){
-	        openFile(null, input,true);
-	    }else{
-	        openFile(new File(input),null,false);
-	    }
-	    
-	}
-	
+
 	private void openFile(final File input,String url, boolean isURL) {
-	    try {
-		    //Open the pdf file so we can check for encryption
+		try {
+			//Open the pdf file so we can check for encryption
 			if(isURL){
-			    pdf.openPdfFileFromURL(url,false);
+				pdf.openPdfFileFromURL(url,false);
 			}
 			else{
-			    pdf.openPdfFile(input.getAbsolutePath());
+				pdf.openPdfFile(input.getAbsolutePath());
 			}
-			
+
 			if(customPluginHandle!=null){
-			    if(isURL){
-			        customPluginHandle.setFileName(url);
-			    }
-			    else{
-			        customPluginHandle.setFileName(input.getAbsolutePath());
-			    }
+				if(isURL){
+					customPluginHandle.setFileName(url);
+				}
+				else{
+					customPluginHandle.setFileName(input.getAbsolutePath());
+				}
 			}
-			
+
 			if(System.getProperty("org.jpedal.page") != null && !System.getProperty("org.jpedal.page").isEmpty()){
-			    currentPage = currentPage < 1 ? 1 : currentPage;
-			    currentPage = currentPage > pdf.getPageCount() ? pdf.getPageCount() : currentPage;
+				currentPage = currentPage < 1 ? 1 : currentPage;
+				currentPage = currentPage > pdf.getPageCount() ? pdf.getPageCount() : currentPage;
 			}
 			else{
-			    currentPage = 1;
+				currentPage = 1;
 			}
-			
+
 			/**
 			 * This code block deals with user input and JVM passwords in Encrypted PDF documents.
 			 */
 			if(pdf.isEncrypted()){
 				int passwordCount = 0;        //Monitors how many attempts there have been to the password
 				closePasswordPrompt = false;  //Do not close the prompt box
-				
+
 				//While the PDF content is not viewable, repeat until the correct password is found
 				while(!pdf.isFileViewable() && !closePasswordPrompt) {
 					/**
@@ -632,40 +632,40 @@ public class BaseViewerFX extends Application {
 						password = System.getProperty("org.jpedal.password");
 					}
 					else if(!closePasswordPrompt){
-					    showPasswordPrompt(passwordCount);
+						showPasswordPrompt(passwordCount);
 					}
-					
+
 					//If we have a password, try and open the PdfFile again with the password
 					if(password != null) {
-					    if(isURL){
-					        pdf.openPdfFileFromURL(url,false,password);
-					    }
-					    else{
-					        pdf.openPdfFile(input.getAbsolutePath());
-					    }
-					    //pdf.setEncryptionPassword(password);
+						if(isURL){
+							pdf.openPdfFileFromURL(url,false,password);
+						}
+						else{
+							pdf.openPdfFile(input.getAbsolutePath());
+						}
+						//pdf.setEncryptionPassword(password);
 					}
 					passwordCount += 1; //Increment he password attempt
 				}
 			}
-			
+
 			// Set up top bar values
 			((Label)top.lookup("#pgCount")).setText("/" + pdf.getPageCount());
 			@SuppressWarnings("unchecked")
 			final ComboBox<String> pages = ((ComboBox<String>)top.lookup("#pages"));
 			pages.getItems().clear();
 			for(int i = 1; i <= pdf.getPageCount(); i++){
-			    pages.getItems().add(String.valueOf(i));
+				pages.getItems().add(String.valueOf(i));
 			}
-			
+
 			// Goes to the first page and starts the decoding process
-		    goToPage(currentPage);
-		    
-	    } catch (final PdfException ex) {
-	        ex.printStackTrace();
-	    }
+			goToPage(currentPage);
+
+		} catch (final PdfException ex) {
+			ex.printStackTrace();
+		}
 	}
-	 
+
 	/**
 	 * This method will show a popup box and request for a password.
 	 * 
@@ -675,71 +675,71 @@ public class BaseViewerFX extends Application {
 	 * @param passwordCount is an int which represents the current input attempt
 	 */
 	private void showPasswordPrompt(final int passwordCount){
-	    
+
 		//Setup password prompt content
 		final Text titleText = new Text("Password Request");
 		final TextField inputPasswordField = new TextField("Please Enter Password");
-		
+
 		//If the user has attempted to enter the password more than once, change the text
 		if(passwordCount >= 1){
-		    titleText.setText("Incorrect Password");
-		    inputPasswordField.setText("Please Try Again");
+			titleText.setText("Incorrect Password");
+			inputPasswordField.setText("Please Try Again");
 		}
-	    
-	    final FXInputDialog passwordInput = new FXInputDialog(stage, titleText.getText()){
-	        @Override
-	        protected void positiveClose(){
-	            super.positiveClose();
-	            closePasswordPrompt = true;
-	        }
-	    };
+
+		final FXInputDialog passwordInput = new FXInputDialog(stage, titleText.getText()){
+			@Override
+			protected void positiveClose(){
+				super.positiveClose();
+				closePasswordPrompt = true;
+			}
+		};
 		password = passwordInput.showInputDialog();
 	}
-	
+
 	private void fitToX(final FitToPage fitToPage) {
-	    
-	    if(fitToPage == FitToPage.NONE) {
-	        return;
-	    }
-	    
-	    final float pageW=pdf.getPdfPageData().getCropBoxWidth2D(currentPage);
-	    final float pageH=pdf.getPdfPageData().getCropBoxHeight2D(currentPage);
-	    final int rotation = pdf.getPdfPageData().getRotation(currentPage);
-	    
-	    //Handle how we auto fit the content to the page
+
+		if(fitToPage == FitToPage.NONE) {
+			return;
+		}
+
+		final float pageW=pdf.getPdfPageData().getCropBoxWidth2D(currentPage);
+		final float pageH=pdf.getPdfPageData().getCropBoxHeight2D(currentPage);
+		final int rotation = pdf.getPdfPageData().getRotation(currentPage);
+
+		//Handle how we auto fit the content to the page
 		if(fitToPage == FitToPage.AUTO && (pageW < pageH)){
-	        if(pdf.getPDFWidth()<pdf.getPDFHeight()) {
-	            fitToX(FitToPage.HEIGHT);
-	        }
-	        else {
-	            fitToX(FitToPage.WIDTH);
-	        }
+			if(pdf.getPDFWidth()<pdf.getPDFHeight()) {
+				fitToX(FitToPage.HEIGHT);
+			}
+			else {
+				fitToX(FitToPage.WIDTH);
+			}
 		}        
-	    
+
 		//Handle how we fit the content to the page width or height
-	    if(fitToPage == FitToPage.WIDTH){
-	        final float width=(float) (scene.getWidth());
-	        if(rotation==90 || rotation==270){
-	            scale = (width - insetX - insetX) / pageH;
-	        }
-	        else{
-	            scale = (width - insetX - insetX) / pageW;
-	        }  
-	    }
-	    else if(fitToPage == FitToPage.HEIGHT){
-	        final float height=(float) (scene.getHeight()-top.getBoundsInLocal().getHeight()-bottom.getHeight());
-	
-	        if(rotation==90 || rotation==270){
-	            scale = (height - insetY - insetY) / pageW;
-	        }
-	        else{
-	            scale = (height - insetY - insetY) / pageH;
-	        }
-	    }
-	    
-	    pdf.setPageParameters(scale, currentPage);
+		if(fitToPage == FitToPage.WIDTH){
+			final float width=(float) (scene.getWidth());
+			if(rotation==90 || rotation==270){
+				scale = (width - insetX - insetX) / pageH;
+			}
+			else{
+				scale = (width - insetX - insetX) / pageW;
+			}  
+		}
+		else if(fitToPage == FitToPage.HEIGHT){
+			final float height=(float) (scene.getHeight()-top.getBoundsInLocal().getHeight()-bottom.getHeight());
+
+			if(rotation==90 || rotation==270){
+				scale = (height - insetY - insetY) / pageW;
+			}
+			else{
+				scale = (height - insetY - insetY) / pageH;
+			}
+		}
+
+		pdf.setPageParameters(scale, currentPage);
 	}
-	
+
 	/**
 	 * Locate scaling value closest to current scaling setting
 	 * @param scale
@@ -747,179 +747,179 @@ public class BaseViewerFX extends Application {
 	 * @return int
 	 */
 	private static int findClosestIndex(final float scale, final float[] scalings) {
-	    float currentMinDiff = Float.MAX_VALUE;
-	    int closest = 0;
-	    
-	    for(int i = 0; i < scalings.length - 1; i++) {
-	        
-	        final float diff = Math.abs(scalings[i] - scale);
-	        
-	        if(diff < currentMinDiff) {
-	            currentMinDiff = diff;
-	            closest = i;
-	        }
-	        
-	    }
-	    return closest;
+		float currentMinDiff = Float.MAX_VALUE;
+		int closest = 0;
+
+		for(int i = 0; i < scalings.length - 1; i++) {
+
+			final float diff = Math.abs(scalings[i] - scale);
+
+			if(diff < currentMinDiff) {
+				currentMinDiff = diff;
+				closest = i;
+			}
+
+		}
+		return closest;
 	}
-	
+
 	private void decodePage() {
-	
-	    try {
-	        final PdfPageData pageData = pdf.getPdfPageData();
-	        final int rotation = pageData.getRotation(currentPage); //rotation angle of current page
-	
+
+		try {
+			final PdfPageData pageData = pdf.getPdfPageData();
+			final int rotation = pageData.getRotation(currentPage); //rotation angle of current page
+
 			//Only call this when the page is displayed vertically, otherwise
 			//it will mess up the document cropping on side-ways documents.
 			if (rotation == 0 || rotation == 180) {
-			    pdf.setPageParameters(scale, currentPage);
+				pdf.setPageParameters(scale, currentPage);
 			}
-			
+
 			pdf.decodePage(currentPage);
 			//wait to ensure decoded
-	        pdf.waitForDecodingToFinish();
-	    } catch (final Exception e) {
-	        e.printStackTrace();
-	    }
-	    fitToX(FitToPage.AUTO);
-	    updateNavButtons();
-	    setBorder();
-	    adjustPagePosition(center.getViewportBounds());
+			pdf.waitForDecodingToFinish();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+		fitToX(FitToPage.AUTO);
+		updateNavButtons();
+		setBorder();
+		adjustPagePosition(center.getViewportBounds());
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private void updateNavButtons(){
-	    if(currentPage > 1){
-	        top.lookup("#back").setDisable(false);
-		}
-	    else{
-		    top.lookup("#back").setDisable(true);
-		}
-		
-		if(currentPage < pdf.getPageCount()){
-		    top.lookup("#forward").setDisable(false);
+		if(currentPage > 1){
+			top.lookup("#back").setDisable(false);
 		}
 		else{
-		    top.lookup("#forward").setDisable(true);
+			top.lookup("#back").setDisable(true);
 		}
-		
+
+		if(currentPage < pdf.getPageCount()){
+			top.lookup("#forward").setDisable(false);
+		}
+		else{
+			top.lookup("#forward").setDisable(true);
+		}
+
 		((ComboBox)top.lookup("#pages")).getSelectionModel().select(currentPage - 1);
 	}
-	
+
 	private void goToPage(final int newPage){
-	    
-	    final TransitionDirection direction ;
-	    
-		    // For sliding Transitions
+
+		final TransitionDirection direction ;
+
+		// For sliding Transitions
 		if(transitionType != TransitionType.Fade || transitionType != TransitionType.None){
-		    direction = newPage > currentPage ? TransitionDirection.LEFT: TransitionDirection.RIGHT;
+			direction = newPage > currentPage ? TransitionDirection.LEFT: TransitionDirection.RIGHT;
 		}
 		else{
-		    direction = TransitionDirection.NONE;
+			direction = TransitionDirection.NONE;
 		}
-		
+
 		switch(transitionType){
-		    case Fade:
-		        startTransition(  newPage, direction);
-		        break;
-		        
-		    case Scale:
-		        startTransition(  newPage, direction);
-		        break;
-		    
-		    case Rotate:
-		        startTransition(  newPage, direction);
-		        break;
-		        
-		    case CardStack:
-		        startTransition(  newPage, direction);
-		        break;
-		        
-		    default: //no transition
-		            currentPage = newPage;
-		            decodePage();
-		            break;
+		case Fade:
+			startTransition(  newPage, direction);
+			break;
+
+		case Scale:
+			startTransition(  newPage, direction);
+			break;
+
+		case Rotate:
+			startTransition(  newPage, direction);
+			break;
+
+		case CardStack:
+			startTransition(  newPage, direction);
+			break;
+
+		default: //no transition
+		currentPage = newPage;
+		decodePage();
+		break;
 		}
 	}
-	    
-    private void startTransition(final int newPage,final TransitionDirection direction){
-        final Transition exitTransition = FXViewerTransitions.exitTransition(pdf, transitionType, direction);
-        if(exitTransition != null){
-            exitTransition.setOnFinished(new EventHandler<ActionEvent>() {
-                @Override public void handle(final ActionEvent t) {
-                    
-                    currentPage = newPage;
 
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            decodePage();
-                        }
-                    });
-                                
-                    TransitionDirection entryDirection = direction;
-                    if(direction != TransitionDirection.NONE){
-                        entryDirection = direction == TransitionDirection.LEFT ? TransitionDirection.RIGHT : TransitionDirection.LEFT;
-                    }
-                     
-                    final Transition entryTransition = FXViewerTransitions.entryTransition(pdf, transitionType, entryDirection);
-                    entryTransition.play();
-                }
-            });
-            exitTransition.play();
-        }
-    }
-	 
+	private void startTransition(final int newPage,final TransitionDirection direction){
+		final Transition exitTransition = FXViewerTransitions.exitTransition(pdf, transitionType, direction);
+		if(exitTransition != null){
+			exitTransition.setOnFinished(new EventHandler<ActionEvent>() {
+				@Override public void handle(final ActionEvent t) {
+
+					currentPage = newPage;
+
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							decodePage();
+						}
+					});
+
+					TransitionDirection entryDirection = direction;
+					if(direction != TransitionDirection.NONE){
+						entryDirection = direction == TransitionDirection.LEFT ? TransitionDirection.RIGHT : TransitionDirection.LEFT;
+					}
+
+					final Transition entryTransition = FXViewerTransitions.entryTransition(pdf, transitionType, entryDirection);
+					entryTransition.play();
+				}
+			});
+			exitTransition.play();
+		}
+	}
+
 	/**
 	 * @return the case sensitive full path and name of the PDF file   
 	 */
 	public String getPDFfilename(){
-	    return PDFfile;
+		return PDFfile;
 	}
-	
+
 	private void adjustPagePosition(final Bounds nb){
-	    // (new scrollbar width / 2) - (page width / 2)
+		// (new scrollbar width / 2) - (page width / 2)
 		double adjustment = ((nb.getWidth() / 2) - (group.getBoundsInLocal().getWidth() /2));
 		// Keep the group within the viewport of the scrollpane
-	    if(adjustment < 0) {
-	        adjustment = 0;
-	    }
-	    group.setTranslateX(adjustment);
+		if(adjustment < 0) {
+			adjustment = 0;
+		}
+		group.setTranslateX(adjustment);
 	}
-	
+
 	// Set a space between the top toolbar and the page
 	private void setBorder() {
-	    // Why it's easier to use a dropshadow for this is beyond me, but here it is...
-	    final int rotation = pdf.getPdfPageData().getRotation(currentPage);
-	    final double x = (rotation == 90 || rotation == 270) ? 40 : 0;
-	    final double y = (rotation == 90 || rotation == 270) ? 0 : 40;
-	    final DropShadow pdfBorder = new DropShadow(0, x,y, Color.TRANSPARENT);
-	    pdf.setEffect(pdfBorder); 
+		// Why it's easier to use a dropshadow for this is beyond me, but here it is...
+		final int rotation = pdf.getPdfPageData().getRotation(currentPage);
+		final double x = (rotation == 90 || rotation == 270) ? 40 : 0;
+		final double y = (rotation == 90 || rotation == 270) ? 0 : 40;
+		final DropShadow pdfBorder = new DropShadow(0, x,y, Color.TRANSPARENT);
+		pdf.setEffect(pdfBorder); 
 	}
-	
+
 	public void addExternalHandler(PluginHandler customPluginHandle){
-	    this.customPluginHandle=customPluginHandle;
+		this.customPluginHandle=customPluginHandle;
 	}
-	
+
 	// TODO: Resume execution from a remote application.
 	public void resumeExecution(TransferWrapper wrapper) {
-		
+
 		Platform.runLater(new Runnable() {
-		
+
 			@Override
 			public void run() {
 				PDFfile = wrapper.getPDFfile();
-		    	scale = wrapper.getScale();
-		    	currentScaling = wrapper.getCurrentScaling();
+				scale = wrapper.getScale();
+				currentScaling = wrapper.getCurrentScaling();
 				zoomMode = wrapper.getZoomMode();
 				transitionType = wrapper.getTransitionType();
-		    	
-		    	pdf.setPageParameters(scale, currentPage);
-		    	loadPDF(PDFfile);
-		    	fitToX(zoomMode);
-		    	currentPage = wrapper.getCurrentPage();
-		    	goToPage(currentPage);
+
+				pdf.setPageParameters(scale, currentPage);
+				loadPDF(PDFfile);
+				fitToX(zoomMode);
+				currentPage = wrapper.getCurrentPage();
+				goToPage(currentPage);
 			}
 		});
-    }
+	}
 }
