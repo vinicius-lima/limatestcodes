@@ -13,6 +13,18 @@ public class PeerTest {
 		
 		peer.registryApplication(applicationName);
 		
+		/*System.out.println("Waiting 3 seconds to stabilize...");
+		try {
+			for(byte i = 3; i > 0; i--){
+				System.out.println(i + "...");
+				Thread.sleep(1000);
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("STABLE!!");*/
+		
 		while(wait != 0){
 			wait = keyboard.nextInt();
 			

@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 
 public class PeerManager {
 	public static final int DISCOVERY_PORT = 2234;
@@ -18,7 +19,7 @@ public class PeerManager {
 	public static final int TIMEOUT = 3000;
 
 	private ArrayList<String> registredApps;
-	private ArrayList<InetAddress> peers;
+	private HashMap<String, ArrayList<InetAddress>> peers;
 	private Thread discoveryThread;
 	private Thread transferenceThread;
 	
@@ -26,7 +27,7 @@ public class PeerManager {
 
 	public PeerManager() {
 		registredApps = new ArrayList<String>();
-		peers = new ArrayList<InetAddress>();
+		peers = new HashMap<String, ArrayList<InetAddress>>();
 		
 		discoveryThread = new Thread(new DiscoveryThread());
 		discoveryThread.start();
@@ -77,11 +78,11 @@ public class PeerManager {
 			while(interfaces.hasMoreElements()){
 				NetworkInterface networkInterface = interfaces.nextElement();
 				
-				if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+				if(networkInterface.isLoopback() || !networkInterface.isUp()) {
 					continue; // Don't want to broadcast to the loopback interface
 				}
 
-				for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()){
+				for(InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()){
 					InetAddress broadcast = interfaceAddress.getBroadcast();
 					InetAddress local = interfaceAddress.getAddress();
 					System.out.println("Local host: " + local.getHostAddress());
@@ -123,10 +124,21 @@ public class PeerManager {
 					String message = new String(receivePacket.getData()).trim();
 					System.out.println("message = " + message);
 		
-					if (message.equals(applicationName)) {
+					if(message.equals(applicationName)) {
 						//DO SOMETHING WITH THE SERVER'S IP (for example, store it in your controller)
 						System.out.println("Peer IP: " + receivePacket.getAddress());
-						peers.add(receivePacket.getAddress());
+						
+						ArrayList<InetAddress> appPeers;
+						appPeers = peers.get(applicationName);
+						if(appPeers == null){
+							appPeers = new ArrayList<InetAddress>();
+							appPeers.add(receivePacket.getAddress());
+							peers.put(applicationName, appPeers);
+						}
+						else if(!appPeers.contains(receivePacket.getAddress())){
+							appPeers.add(receivePacket.getAddress());
+						}
+						
 						foundAny++;
 					}
 		
@@ -190,19 +202,45 @@ public class PeerManager {
 	}
 	
 	public void transferState(String applicationName, String state) {
-		try {
-			System.out.println("Transfering to " + peers.get(0));
-			//Socket peer = new Socket(peers.get(0), TRANSFERENCE_PORT);
-			Socket peer = new Socket(peers.get(0).getHostAddress(), TRANSFERENCE_PORT);
-			//Socket peer = new Socket("10.16.1.14", TRANSFERENCE_PORT);
-			DataOutputStream out = new DataOutputStream(peer.getOutputStream());
-			
-			out.write(state.getBytes());
-			
-			out.close();
-			peer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		boolean ack = false;
+		while(!ack){
+			try {
+				ArrayList<InetAddress> appPeers;
+				appPeers = peers.get(applicationName);
+				
+				if(appPeers == null)
+					return;
+				
+				for(InetAddress peer : appPeers){
+					//System.out.println("Transfering...");
+					//Socket peer = new Socket(peers.get(0), TRANSFERENCE_PORT);
+					Socket peerConn = new Socket(peer.getHostAddress(), TRANSFERENCE_PORT);
+					if(peerConn.getInetAddress().equals(peerConn.getLocalAddress())){
+						peerConn.close();
+						//System.out.println("Attempt to local host!");
+						continue;
+					}
+					//Socket peer = new Socket("10.16.1.2", TRANSFERENCE_PORT);
+					DataOutputStream out = new DataOutputStream(peerConn.getOutputStream());
+					DataInputStream in = new DataInputStream(peerConn.getInputStream());
+					
+					System.out.println("Transfering to " + peer);
+					do{
+						out.write(state.getBytes());
+						ack = in.readBoolean();
+					}while(!ack);
+					System.out.println("ACK received!!!");
+					
+					out.close();
+					in.close();
+					peerConn.close();
+				}
+				
+				ack = true;
+			} catch (IOException e) {
+				//e.printStackTrace();
+				//System.err.println("Something went wrong! Retrying...");
+			}
 		}
 	}
 	
@@ -216,17 +254,31 @@ public class PeerManager {
 				
 				while(true){
 					Socket peer = socket.accept();
+					
+					/*if(peer.getInetAddress().equals(peer.getLocalAddress()))
+						System.out.println("Connected to local host!!!");*/
+					
 					DataInputStream in = new DataInputStream(peer.getInputStream());
+					DataOutputStream out = new DataOutputStream(peer.getOutputStream());
 					
-					byte[] recvBuf = new byte[in.available()];
-					in.read(recvBuf);
-					String state = new String(recvBuf);
-					
-					// TODO: difenrenciar de qual aplicacao eh o estado recebido.
-					//localServiceImplementation.resumeApplicationState(registredApps.get(0), state);
-					System.out.println("State received - " + registredApps.get(0) + ": " + state);
+					System.out.println("State size received: " + in.available());
+					if(in.available() > 0){
+						byte[] recvBuf = new byte[in.available()];
+						in.read(recvBuf);
+						String state = new String(recvBuf);
+						
+						// TODO: difenrenciar de qual aplicacao eh o estado recebido.
+						//localServiceImplementation.resumeApplicationState(registredApps.get(0), state);
+						System.out.println("State received - " + registredApps.get(0) + ": " + state);
+						
+						out.writeBoolean(true);
+					}
+					else{
+						out.writeBoolean(false);
+					}
 					
 					in.close();
+					out.close();
 					peer.close();
 				}
 			} catch (IOException e) {
