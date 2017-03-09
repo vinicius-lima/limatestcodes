@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Things Web Page</title>
+        <script src="things-client.js"></script>
+    </head>
+
+    <body>
+        <div>
+            Log:<br>
+            <textarea id="textarea" rows="10" cols="50"></textarea><br>
+            <input type="button" onclick="getAllThings()" value="Get all things">
+        </div>
+        <hr>
+        <div>
+            <input type="button" onclick="getToken()" value="Get OAuth token"><br>
+        </div>
+        <hr>
+        <div>
+            <input type="text" id="value"><br>
+            <input type="button" onclick="addThing()" value="Add thing"><br>
+        </div>
+        <hr>
+        <div>
+            <label>ID: </label><input type="text" id="thingId"><br>
+            <input type="button" onclick="getThing()" value="Get thing"><br>
+            <input type="button" onclick="deleteThing()" value="Delete thing"><br>
+        </div>
+        <hr>
+        <div>
+            <input type="button" onclick="getProfile()" value="Profile"><br>
+        </div>
+    </body>
+
+</html>
