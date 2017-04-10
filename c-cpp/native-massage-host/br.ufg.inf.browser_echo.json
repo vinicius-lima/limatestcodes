@@ -1,0 +1,9 @@
+{
+  "name": "br.ufg.inf.browser_echo",
+  "description": "Echos a browser message",
+  "path": "/home/vinicius/Área de Trabalho/native-massage-host/browser-nmh",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://knldjmfmopnpolahpmmgbagdohdnhkik/"
+  ]
+}
