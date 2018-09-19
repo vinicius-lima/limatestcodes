@@ -1,0 +1,61 @@
+---
+#
+# Installing Kibana
+#
+
+# Download and install Elasticsearch PGP Key
+- name: Downloading Elasticsearch RPM file
+  command: rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+# Add Kibana repo
+- name: Adding Kibana repo
+  yum_repository:
+    name: kibana-6.x
+    description: Kibana repository for 6.x packages
+    file: kibana
+    baseurl: https://artifacts.elastic.co/packages/6.x/yum
+    gpgcheck: yes
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    enabled: yes
+    state: present
+  notify:
+  - Add missing repository lines
+
+# Force handlers to run
+- meta: flush_handlers
+
+# Install Kibana
+- name: Installing Kibana
+  yum:
+    name: kibana
+    state: latest
+    update_cache: yes
+ 
+# Update Kibana config file
+- name: Updating the config file to allow outside access
+  lineinfile:
+   path: /etc/kibana/kibana.yml
+   regexp: 'server.host:'
+   line: 'server.host: 0.0.0.0'
+
+- name: Defining server port
+  lineinfile:
+   path: /etc/kibana/kibana.yml
+   regexp: 'server.port:'
+   line: 'server.port: 5601'
+    
+- name: Defining Elasticsearch URL
+  lineinfile:
+   destfile: /etc/kibana/kibana.yml
+   regexp: 'elasticsearch.url:'
+   line: 'elasticsearch.url: "http://localhost:9200"'
+   
+# Start Kibana
+- name: Reloading daemon
+  command: systemctl daemon-reload
+
+- name: Starting Kibana
+  service:
+    name: kibana
+    enabled: yes
+    state: restarted

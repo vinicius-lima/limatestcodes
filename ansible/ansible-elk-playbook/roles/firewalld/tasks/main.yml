@@ -1,0 +1,70 @@
+---
+#
+# Allow traffic on required ports
+#
+
+# Kibana
+- name: Allow Kibana UDP port
+  firewalld:
+    zone: public
+    port: 5601/udp
+    permanent: true
+    state: enabled
+
+- name: Allow Kibana TCP port
+  firewalld:
+    zone: public
+    port: 5601/tcp
+    permanent: true
+    state: enabled
+
+# Elasticsearch
+- name: Allow Elasticsearch UDP port range
+  firewalld:
+    zone: public
+    port: 9200-9300/udp
+    permanent: true
+    state: enabled
+
+- name: Allow Elasticsearch TCP port range
+  firewalld:
+    zone: public
+    port: 9200-9300/tcp
+    permanent: true
+    state: enabled
+
+# Logstash monitoring
+- name: Allow Logstash monitoring UDP port range
+  firewalld:
+    zone: public
+    port: 9600-9700/udp
+    permanent: true
+    state: enabled
+
+- name: Allow Logstash monitoring TCP port range
+  firewalld:
+    zone: public
+    port: 9600-9700/tcp
+    permanent: true
+    state: enabled
+
+# HTTP and HTTPS services
+- name: Allow HTTP service
+  firewalld:
+    zone: public
+    service: http
+    permanent: true
+    state: enabled
+
+- name: Allow HTTPS service
+  firewalld:
+    zone: public
+    service: https
+    permanent: true
+    state: enabled
+
+# Restart firewalld
+- name: Restart firewalld service
+  service:
+    name: firewalld
+    state: restarted

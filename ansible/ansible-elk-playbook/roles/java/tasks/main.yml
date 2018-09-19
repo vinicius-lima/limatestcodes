@@ -1,0 +1,28 @@
+---
+#
+# Installing Java 8
+#
+
+- name: Download Java 8 RPM file
+  get_url:
+    url: http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jre-8u181-linux-x64.rpm
+    dest: /home/ansible/jre-8u172-linux-x64.rpm
+    headers: 'Cookie: oraclelicense=accept-securebackup-cookie'
+    owner: ansible
+    group: ansible
+    mode: 0664
+
+- name: Install Java 8
+  yum:
+    name: /home/ansible/jre-8u172-linux-x64.rpm
+    state: present
+
+- name: Set JAVA_HOME environment variable
+  lineinfile:
+    path: /home/ansible/.bashrc
+    line: 'export JAVA_HOME=/usr/java/jre1.8.0_181-amd64'
+
+- name: Delete Java 8 RPM file
+  file:
+    path: /home/ansible/jre-8u172-linux-x64.rpm
+    state: absent

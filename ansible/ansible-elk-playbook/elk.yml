@@ -1,0 +1,27 @@
+---
+#
+# Playbook to install the ELK stack + Beats
+#
+- hosts: elkservers
+  remote_user: ansible
+  become: yes
+  become_method: sudo
+  connection: ssh
+  gather_facts: yes
+  roles:
+  - { role: preparation }
+  - { role: java }
+  - { role: firewalld }
+  - { role: elasticsearch }
+  - { role: kibana }
+#  - { role: metricbeat }
+#  - { role: logstash }
+#  - { role: grafana }
+#  - { role: curator }
+#  - { role: crontab }
+  post_tasks:
+  - name: Reboot machine
+    shell: sleep 2 && shutdown -r now
+    async: 1
+    poll: 0
+    ignore_errors: true

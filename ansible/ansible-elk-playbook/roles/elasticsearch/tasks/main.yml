@@ -1,0 +1,61 @@
+---
+#
+# Installing Elasticsearch
+#
+
+# Download and install Elasticsearch PGP Key
+- name: Downloading Elasticsearch RPM file
+  command: rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+# Add Elastichsearch repo
+- name: Adding Elasticsearch repo
+  yum_repository:
+    name: elasticsearch-6.x
+    description: Elasticsearch repository for 6.x packages
+    file: elasticsearch
+    baseurl: https://artifacts.elastic.co/packages/6.x/yum
+    gpgcheck: yes
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    enabled: yes
+    state: present
+  notify:
+  - Add missing repository lines
+
+# Force handlers to run
+- meta: flush_handlers
+
+# Install Elasticsearch
+- name: Installing Elastichsearch
+  yum:
+    name: elasticsearch
+    state: latest
+    update_cache: yes
+
+# Update Elasticsearch config file
+- name: Updating the config file to allow outside access
+  lineinfile:
+   path: /etc/elasticsearch/elasticsearch.yml
+   regexp: 'network.host:'
+   line: 'network.host: 0.0.0.0'
+
+- name: Updating the port in config file 
+  lineinfile:
+   path: /etc/elasticsearch/elasticsearch.yml
+   regexp: 'http.port:'
+   line: 'http.port: 9200'
+
+# Update sysctl.conf file
+- name: Update sysctl conf file
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: 'vm.max_map_count=262144'
+
+# Start Elasticsearch
+- name: Reloading daemon
+  command: systemctl daemon-reload
+
+- name: Starting Elasticsearch
+  service:
+    name: elasticsearch
+    enabled: yes
+    state: restarted

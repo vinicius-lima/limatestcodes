@@ -1,0 +1,39 @@
+---
+#
+# Updating YUM and installing facilitating packages
+#
+
+# Update all
+- name: Update installed packages
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+# Install packages
+- name: Install facilitating packages
+  yum:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+    - wget
+    - vim
+    - ntp
+    - ntpdate
+
+- name: Stop ntpd service
+  service:
+    name: ntpd
+    state: stopped
+
+- name: Configure ntpdate
+  command: ntpdate pool.ntp.br
+
+- name: Start ntpd service
+  service:
+    name: ntpd
+    enabled: yes
+    state: restarted
+  notify:
+  - Change localtime

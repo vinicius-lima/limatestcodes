@@ -1,0 +1,12 @@
+---
+#
+# Preparation handlers
+#
+
+- name: Add missing repository lines
+  lineinfile:
+    path: /etc/yum.repos.d/elasticsearch.repo
+    line: "{{ item }}"
+  with_items:
+  - autorefresh=1
+  - type=rpm-md
