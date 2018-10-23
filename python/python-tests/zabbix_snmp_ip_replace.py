@@ -176,10 +176,14 @@ for idx in range(len(interfaces)):
 
             if errorIndication:
                 snmp_up = False
+                print(errorIndication)
             elif errorStatus:
                 snmp_up = False
+                print('%s at %s' % (errorStatus.prettyPrint(),
+                        errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
             else:
                 snmp_up = True
+            print("snmp_up =", snmp_up)
 
         if interface_up and snmp_up and interfaces[idx]["main"] == "1":
             break  # Breaks -> for idx in range(len(interfaces))
