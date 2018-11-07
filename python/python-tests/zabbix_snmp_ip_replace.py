@@ -156,38 +156,30 @@ for idx in range(len(interfaces)):
     print("port:", interfaces[idx]["port"])
 
     if interface_type(interfaces[idx]["type"]) == "SNMP":
-        interface_up = True if Popen(
-            ["/bin/ping", "-c", "1", dst],
-            stdout=DEVNULL,
-            stderr=STDOUT
-        ).wait() is 0 else False
-        print("interface_up =", interface_up)
-
-        if interface_up:
-            errorIndication, errorStatus, errorIndex, varBinds = next(
-                getCmd(
-                    SnmpEngine(),
-                    CommunityData('public'),
-                    UdpTransportTarget((dst, interfaces[idx]["port"])),
-                    ContextData(),
-                    ObjectType(ObjectIdentity(search_oid))
-                )
+        errorIndication, errorStatus, errorIndex, varBinds = next(
+            getCmd(
+                SnmpEngine(),
+                CommunityData('public'),
+                UdpTransportTarget((dst, interfaces[idx]["port"])),
+                ContextData(),
+                ObjectType(ObjectIdentity(search_oid))
             )
+        )
 
-            if errorIndication:
-                snmp_up = False
-                print(errorIndication)
-            elif errorStatus:
-                snmp_up = False
-                print('%s at %s' % (errorStatus.prettyPrint(),
-                        errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-            else:
-                snmp_up = True
-            print("snmp_up =", snmp_up)
+        if errorIndication:
+            snmp_up = False
+            print(errorIndication)
+        elif errorStatus:
+            snmp_up = False
+            print('%s at %s' % (errorStatus.prettyPrint(),
+                    errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
+        else:
+            snmp_up = True
+        print("snmp_up =", snmp_up)
 
-        if interface_up and snmp_up and interfaces[idx]["main"] == "1":
+        if snmp_up and interfaces[idx]["main"] == "1":
             break  # Breaks -> for idx in range(len(interfaces))
-        elif interface_up and snmp_up and interfaces[idx]["main"] == "0":
+        elif snmp_up and interfaces[idx]["main"] == "0":
             params = []
             interface = dict()
             for itf in interfaces:
