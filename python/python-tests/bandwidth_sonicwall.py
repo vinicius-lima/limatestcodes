@@ -9,7 +9,8 @@ if len(sys.argv) != 4:
     sys.exit(1)
 
 backup_path = sys.argv[1]
-host_name = sys.argv[2]
+host_name = sys.argv[2].split(' ')
+host_name = ''.join(host_name)
 
 interface = sys.argv[3].split(' ')
 interface = interface[0] + ' ' + interface[1]
