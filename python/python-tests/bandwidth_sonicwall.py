@@ -9,6 +9,7 @@ if len(sys.argv) != 4:
     sys.exit(1)
 
 backup_path = sys.argv[1]
+
 host_name = sys.argv[2].split(' ')
 host_name = ''.join(host_name)
 
@@ -40,6 +41,9 @@ with open(file_path, 'r', encoding='utf-8') as in_file:
                 sys.exit(0)
             elif re.search('.*bandwidth-management ([\d\.]*)', line):
                 bandwidth = re.search('.*bandwidth-management ([\d\.]*)', line).groups()
+                if bandwidth == '':
+                    bandwidth = re.search('.*bandwidth-management egress ([\d\.]*)', line).groups()
                 print(bandwidth[0])
                 sys.exit(0)
-    print('0.000')
+
+print('0.000')
