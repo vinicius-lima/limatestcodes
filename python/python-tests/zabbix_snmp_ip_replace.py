@@ -129,15 +129,20 @@ def set_snmp_interface(params, zabbix_url, user_auth):
 
 
 zabbix_url = 'http://192.168.121.134/zabbix/api_jsonrpc.php'
-user_auth = "access_token"
+zabbix_user_auth = "access_token"
+
+security_user_name = "appliance_user"
+snmp_authkey_sha = "appliance_authentication_key"
+snmp_privkey_des = "appliance_private_key"
+
 host_name = str(sys.argv[1])
 search_oid = '1.3.6.1.2.1.1.3.0'  # sysUpTime.0
 print("host_name =", host_name)
 
-host_id = get_host_id(host_name, zabbix_url, user_auth)
+host_id = get_host_id(host_name, zabbix_url, zabbix_user_auth)
 print("host_id =", host_id)
 
-interfaces = get_host_interfaces(host_id, zabbix_url, user_auth)
+interfaces = get_host_interfaces(host_id, zabbix_url, zabbix_user_auth)
 
 for idx in range(len(interfaces)):
     print("-------------------------")
@@ -175,7 +180,34 @@ for idx in range(len(interfaces)):
                     errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
         else:
             snmp_up = True
-        print("snmp_up =", snmp_up)
+        print("SNMP V2 UP =", snmp_up)
+
+        if not snmp_up:
+            errorIndication, errorStatus, errorIndex, varBinds = next(
+                getCmd(
+                    SnmpEngine(),
+                    UsmUserData(
+                        security_user_name,
+                        snmp_authkey_sha,
+                        snmp_privkey_des,
+                        authProtocol=usmHMACSHAAuthProtocol,
+                        privProtocol=usmDESPrivProtocol),
+                    UdpTransportTarget((dst, interfaces[idx]["port"])),
+                    ContextData(),
+                    ObjectType(ObjectIdentity(search_oid))
+                )
+            )
+
+            if errorIndication:
+                snmp_up = False
+                print(errorIndication)
+            elif errorStatus:
+                snmp_up = False
+                print('%s at %s' % (errorStatus.prettyPrint(),
+                        errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
+            else:
+                snmp_up = True
+            print("SNMP V3 UP =", snmp_up)
 
         if snmp_up and interfaces[idx]["main"] == "1":
             break  # Breaks -> for idx in range(len(interfaces))
@@ -203,5 +235,5 @@ for idx in range(len(interfaces)):
                     interface['port'] = itf['port']
                     params.append(interface.copy())
             params[0]['interfaceid'], params[1]['interfaceid'] = params[1]['interfaceid'], params[0]['interfaceid']
-            set_snmp_interface(params, zabbix_url, user_auth)
+            set_snmp_interface(params, zabbix_url, zabbix_user_auth)
             break  # Breaks -> for idx in range(len(interfaces))
