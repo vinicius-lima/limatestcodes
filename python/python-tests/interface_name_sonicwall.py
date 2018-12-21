@@ -14,6 +14,9 @@ host_name = sys.argv[2].split(' ')
 host_name = ''.join(host_name)
 
 interface = sys.argv[3]
+if re.match('^interface .*\)$'.format(interface), interface):
+    interface = sys.argv[3].split(' ')
+    interface = interface[0] + ' ' + interface[1]
 
 try:
     file_path = glob('{}/{}_*.cli'.format(backup_path, host_name))[0]
