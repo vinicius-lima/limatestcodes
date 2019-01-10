@@ -1,4 +1,5 @@
 import re
+import os
 import glob
 from base64 import b64decode
 from .rules import AccessRule, NatRule
@@ -110,16 +111,26 @@ class Tagger:
             and rule[frm] != rule[to] and rule[act] == 'Allow'
 
 
-def read_exp_file_content(file_path):
-    with open(file_path, 'r') as in_file:
-        content = in_file.read()
-        content = str(b64decode(content))
-        content = content.replace('%20', ' ')
-        content = content.replace('%3a', ':')
-        content = content.split('&')
-    return content
+class FileManager:
+    @staticmethod
+    def read_exp_file_content(file_path):
+        with open(file_path, 'r') as in_file:
+            content = in_file.read()
+            content = str(b64decode(content))
+            content = content.replace('%20', ' ')
+            content = content.replace('%3a', ':')
+            content = content.split('&')
+        return content
 
+    @staticmethod
+    def clear_folder(folder, file_extension='.html'):
+        if not file_extension.startswith('.'):
+            file_extension = '.' + file_extension
+        file_list = [file for file in os.listdir(folder) if file.endswith(file_extension)]
+        for file in file_list:
+            os.remove(os.path.join(folder, file))
 
-def list_files(path):
-    files = glob.glob(path)
-    return files
+    @staticmethod
+    def list_files(path):
+        files = glob.glob(path)
+        return files
