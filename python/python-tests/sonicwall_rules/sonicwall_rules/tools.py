@@ -1,4 +1,5 @@
 import re
+import glob
 from base64 import b64decode
 from .rules import AccessRule, NatRule
 
@@ -117,3 +118,8 @@ def read_exp_file_content(file_path):
         content = content.replace('%3a', ':')
         content = content.split('&')
     return content
+
+
+def list_files(path):
+    files = glob.glob(path)
+    return files
