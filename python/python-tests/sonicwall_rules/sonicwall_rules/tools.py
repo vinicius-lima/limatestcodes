@@ -71,7 +71,7 @@ class Tagger:
 
                 was_changed = False
                 for prop_key, old_value in old_prop.items():
-                    if old_value != new_prop[prop_key] and prop_key in analised_properties:
+                    if old_value != new_prop.get(prop_key) and prop_key in analised_properties:
                         was_changed = True
                         break
                 if was_changed:

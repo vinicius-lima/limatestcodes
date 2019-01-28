@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import pathlib
 from sys import argv
 from os import sep as os_sep
 from os.path import join as path_join
@@ -39,9 +40,9 @@ analised_properties = [
 work_dir = args.work_dir
 print('[!] Working directory:', work_dir)
 
-print('[+] Deleting', args.format, 'files from output directory:', args.output_dir)
-FileManager.clear_folder(args.output_dir, args.format)
-print('[!] Files deleted')
+#print('[+] Deleting', args.format, 'files from output directory:', args.output_dir)
+#FileManager.clear_folder(args.output_dir, args.format)
+#print('[!] Files deleted')
 
 today = datetime.date.today()
 week_ago = datetime.timedelta(days=7)
@@ -49,6 +50,8 @@ week_ago = today - week_ago
 
 today_path = path_join(work_dir, str(today))
 week_ago_path = path_join(work_dir, str(week_ago))
+
+pathlib.Path(path_join(args.output_dir, str(today))).mkdir(exist_ok=True)
 
 print('[+] Searching backup files in', today_path)
 backup_files = FileManager.list_files(path_join(work_dir, str(today), '*.exp'))
@@ -79,7 +82,7 @@ for file_path in backup_files:
 
     diff_rules = Tagger.diff_rules(old_rules, new_rules, analised_properties, 'access_rules')
 
-    output_path = path_join(args.output_dir, '_'.join([host, str(today), complement]))
+    output_path = path_join(args.output_dir, str(today), '_'.join([host, str(today), complement]))
     if args.format == 'html':
         output_path = output_path[:-4] + '.html'
         writer = HtmlWriter(output_path)
@@ -206,4 +209,4 @@ for file_path in backup_files:
 
     writer.build()
 
-print('[!] DONE. Ouput files are stored in', args.output_dir, 'as', args.format)
+print('[!] DONE. Ouput files are stored in', path_join(args.output_dir, str(today)), 'as', args.format)
