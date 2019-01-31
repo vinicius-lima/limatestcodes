@@ -141,13 +141,14 @@ for file_path in backup_files:
                 rule[1].get_action(),
                 rule[1].get_enable()
             ]
-            rule_id = rule[0].rule_id
+            #rule_id = rule[0].rule_id
             if Tagger.is_threatening_rule(rule_to_analyse):
                 if args.format == 'html':
                     rule_to_analyse[1] = '<span style="color: red;">' + rule_to_analyse[1] + '</span>'
                 table.append(rule_to_analyse)
                 idx += 1
 
+    ipv4_threatens_amount = len(table) if len(table) > 1 else 0
     writer.append(table.copy(), FileWriter.TABLE)
     writer.append(writer.NEWLINE, FileWriter.LINE)
 
@@ -197,16 +198,18 @@ for file_path in backup_files:
                 rule[1].get_action(),
                 rule[1].get_enable()
             ]
-            rule_id = rule[0].rule_id
+            #rule_id = rule[0].rule_id
             if Tagger.is_threatening_rule(rule_to_analyse):
                 if args.format == 'html':
                     rule_to_analyse[1] = '<span style="color: red;">' + rule_to_analyse[1] + '</span>'
                 table.append(rule_to_analyse)
                 idx += 1
 
+    ipv6_threatens_amount = len(table) if len(table) > 1 else 0
     writer.append(table.copy(), FileWriter.TABLE)
     writer.append(writer.NEWLINE, FileWriter.LINE)
 
-    writer.build()
+    if ipv4_threatens_amount > 0 and ipv6_threatens_amount > 0:
+        writer.build()
 
 print('[!] DONE. Ouput files are stored in', path_join(args.output_dir, str(today)), 'as', args.format)

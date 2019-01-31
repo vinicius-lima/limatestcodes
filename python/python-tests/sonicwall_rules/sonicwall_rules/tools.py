@@ -90,16 +90,27 @@ class Tagger:
 
     @staticmethod
     def is_threatening_rule(rule):
-        frm = 2
-        to = 3
-        src = 4
-        dst = 5
-        svc = 6
-        who = 7
-        act = 8
-        enb = 9
-        any_count = 0
+        frm = 2  # From
+        to = 3   # To
+        src = 4  # Source
+        dst = 5  # Destination
+        svc = 6  # Service
+        who = 7  # User Incl.
+        act = 8  # Action
+        enb = 9  # Enabled
 
+        if rule[to] == 'VPN':
+            if rule[src] == 'WAN RemoteAccess Networks' or rule[src] == 'WLAN RemoteAccess Networks':
+                return False
+
+        if rule[frm] == 'VPN':
+            if rule[dst] == 'WAN RemoteAccess Networks' or rule[dst] == 'WLAN RemoteAccess Networks':
+                return False
+
+        if rule[to] == 'MULTICAST':
+            return False
+
+        any_count = 0
         if rule[src] == 'Any':
             any_count += 1
         if rule[dst] == 'Any':
