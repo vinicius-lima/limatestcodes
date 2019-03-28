@@ -8,10 +8,22 @@ from paramiko.client import SSHClient
 
 warnings.filterwarnings(action='ignore', module='.*paramiko.*')
 
-# Licenses to look for
 licenses = {
-    1: 'Gateway AV/Anti-Spyware/Intrusion Prevention/App Control/App Visualization',
-    2: 'Premium Content Filter'
+    # Licenses to look for on firmware version 5
+    '5': {
+        1: 'SSL VPN Nodes/Users',
+        2: 'Virtual Assist Nodes/Users',
+        3: 'Gateway Anti-Virus',
+        4: 'Anti-Spyware',
+        5: 'Intrusion Prevention',
+        6: 'Application Firewall',
+        7: 'Visualization Control'
+    },
+    # Licenses to look for on firmware version 6
+    '6': {
+        1: 'Gateway AV/Anti-Spyware/Intrusion Prevention/App Control/App Visualization',
+        2: 'Premium Content Filter'
+    }
 }
 
 
@@ -30,10 +42,44 @@ def wait_prompt(timeout):
         time.sleep(1)
 
 
-# Search licenses
-def search_licenses(timeout):
+# Searches licenses onto firmware version 5
+def search_licenses_v5(timeout):
     cont = 0
-    remaining_licenses = len(licenses)
+    remaining_licenses = len(licenses['5'])
+    licenses_status = dict()
+
+    while cont < timeout and remaining_licenses > 0:
+        buff = channel.recv(1024)
+        line = buff.decode('utf-8')
+
+        for key, license in licenses.get(credentials[host]['version'], {}).items():
+            idx = line.find(license)  # Is it the license we are looking for?
+            if idx != -1:  # License was found
+                idx += len(license) + 1
+                while line[idx] != ':':
+                    idx += 1
+                if line[idx + 1] == 'L':  # Is the license valid?
+                    licenses_status[key] = 'Licensed'
+                else:
+                    licenses_status[key] = 'Not Licensed'
+                remaining_licenses -= 1
+
+        cont += 1
+        if cont >= timeout:
+            raise TimeoutError
+        for c in buff:
+            if chr(c) == '>':
+                cont = timeout
+                break
+        time.sleep(1)
+
+    return licenses_status
+
+
+# Searches licenses onto firmware version 6
+def search_licenses_v6(timeout):
+    cont = 0
+    remaining_licenses = len(licenses['6'])
     licenses_status = dict()
 
     while cont < timeout and remaining_licenses > 0:
@@ -42,7 +88,7 @@ def search_licenses(timeout):
         line = line[7:]  # Remove trash from line begining
         line = ''.join(line)
 
-        for key, license in licenses.items():
+        for key, license in licenses['6'].items():
             line = ''.join(line)
             if line.startswith(license):  # Is it the license we are looking for?
                 line = line[len(license):]
@@ -79,7 +125,8 @@ def read_credentials_file(file_path):
             credentials[line[0]] = {
                 'ip': line[1],
                 'port': line[2],
-                'pwd': ''.join(line[3][:-1])
+                'pwd': ''.join(line[3]),
+                'version': line[4]
             }
     return credentials
 
@@ -97,6 +144,7 @@ licenses_status = dict()
 # Connecting to devices and retrieving licenses status
 for host in credentials.keys():
     print('Host:', host)
+    print('Firmware Version:', credentials[host]['version'])
     try:
         client.connect(
             credentials[host]['ip'],
@@ -108,10 +156,14 @@ for host in credentials.keys():
         channel = client.invoke_shell()
         wait_prompt(30)
 
-        channel.send('show license status\n')
-        licenses_status[host] = search_licenses(30)
+        if credentials[host]['version'] == '5':
+            channel.send('show status\n')
+            licenses_status[host] = search_licenses_v5(30)
+        elif credentials[host]['version'] == '6':
+            channel.send('show license status\n')
+            licenses_status[host] = search_licenses_v6(30)
 
-        for key, license in licenses.items():
+        for key, license in licenses.get(credentials[host]['version'], {}).items():
             print(license, '|', licenses_status.get(host).get(key))
         print('==============================')
 
@@ -121,19 +173,29 @@ for host in credentials.keys():
         client.close()
     except TimeoutError:
         licenses_status[host] = dict()
-        for key in range(1, len(licenses) + 1):
+        for key in range(1, len(licenses[credentials[host]['version']]) + 1):
             licenses_status[host][key] = 'Unreachable'
 
-        for license in licenses.values():
+        for license in licenses[credentials[host]['version']].values():
             print(license, '| Unreachable')
         print('==============================')
 
 # Writting output files
 write_directory = argv[2]
-for key, license in licenses.items():
+for key, license in licenses['5'].items():
     license = license.replace(' ', '_')
     license = license.replace('/', '-')
 
     with open(path_join(write_directory, license + '.txt'), 'w') as output_file:
         for host, status in licenses_status.items():
-            output_file.write('{},{}\n'.format(host, status.get(key)))
+            if credentials[host]['version'] == '5':
+                output_file.write('{},{}\n'.format(host, status.get(key)))
+
+for key, license in licenses['6'].items():
+    license = license.replace(' ', '_')
+    license = license.replace('/', '-')
+
+    with open(path_join(write_directory, license + '.txt'), 'w') as output_file:
+        for host, status in licenses_status.items():
+            if credentials[host]['version'] == '6':
+                output_file.write('{},{}\n'.format(host, status.get(key)))
