@@ -180,22 +180,14 @@ for host in credentials.keys():
             print(license, '| Unreachable')
         print('==============================')
 
-# Writting output files
+# Writting output file
 write_directory = argv[2]
-for key, license in licenses['5'].items():
-    license = license.replace(' ', '_')
-    license = license.replace('/', '-')
-
-    with open(path_join(write_directory, license + '.txt'), 'w') as output_file:
-        for host, status in licenses_status.items():
-            if credentials[host]['version'] == '5':
-                output_file.write('{},{}\n'.format(host, status.get(key)))
-
-for key, license in licenses['6'].items():
-    license = license.replace(' ', '_')
-    license = license.replace('/', '-')
-
-    with open(path_join(write_directory, license + '.txt'), 'w') as output_file:
-        for host, status in licenses_status.items():
-            if credentials[host]['version'] == '6':
-                output_file.write('{},{}\n'.format(host, status.get(key)))
+with open(path_join(write_directory, 'sonicwall_licenses_status.txt'), 'w') as output_file:
+    for host in licenses_status.keys():
+        is_licensed = True
+        status = ''
+        for status in licenses_status[host].values():
+            if status != 'Licensed':
+                is_licensed = False
+                break
+        output_file.write('{},{}\n'.format(host, status))
