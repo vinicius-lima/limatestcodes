@@ -16,7 +16,7 @@ PublicKey = 'your public key'
 access_token = ''
 
 
-def refresh_token():
+def get_access_token():
     endpoint = '/Login/autenticar'
     payload = {
         'PublicKey': PublicKey
@@ -29,21 +29,10 @@ def refresh_token():
     )
 
     access_token = response.json()
-
-    with open('deskmanager_token.txt', 'w') as token_file:
-        token_file.write(access_token)
-
     return access_token
 
 
-try:
-    with open('deskmanager_token.txt', 'r') as token_file:
-        access_token = token_file.read()
-except:
-    pass
-
-if access_token == '':
-    access_token = refresh_token()
+access_token = get_access_token()
 
 endpoint = '/ChamadosSuporte/lista'
 payload = {
@@ -63,16 +52,7 @@ try:
         data=dumps(payload),
         headers={"Authorization": access_token}
     )
-
     response = response.json()
-    if response.get('erro', None) is not None:
-        access_token = refresh_token()
-        response = requests.post(
-            base_url + endpoint,
-            data=dumps(payload),
-            headers={"Authorization": access_token}
-        )
-        response = response.json()
 except JSONDecodeError:
     print('[-] Could not parse JSON')
     sys.exit(1)
