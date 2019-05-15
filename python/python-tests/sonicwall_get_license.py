@@ -15,8 +15,7 @@ licenses = {
     3: 'Gateway Anti-Virus',
     4: 'Anti-Spyware',
     5: 'Intrusion Prevention',
-    6: 'Application Firewall',
-    7: 'Visualization Control'
+    6: 'Application Firewall'
 }
 
 
@@ -45,17 +44,34 @@ def search_licenses(timeout):
         buff = channel.recv(1024)
         line = buff.decode('utf-8')
 
-        for key, license in licenses.items():
-            idx = line.find(license)  # Is it the license we are looking for?
-            if idx != -1:  # License was found
-                idx += len(license) + 1
-                while line[idx] != ':':
-                    idx += 1
-                if line[idx + 1] == 'L':  # Is the license valid?
-                    licenses_status[key] = 'Licensed'
-                else:
-                    licenses_status[key] = 'Not Licensed'
-                remaining_licenses -= 1
+        if credentials[host]['version'] == '5':
+            for key, license in licenses.items():
+                # Is it the license we are looking for?
+                idx = line.find(license)
+                if idx != -1:  # License was found
+                    idx += len(license) + 1
+                    while line[idx] != ':':
+                        idx += 1
+                    if line[idx + 1] == 'L':  # Is the license valid?
+                        licenses_status[key] = 'Licensed'
+                    else:
+                        licenses_status[key] = 'Not Licensed'
+                    remaining_licenses -= 1
+        elif credentials[host]['version'] == '6':
+            line = line[7:]  # Remove trash from line begining
+            line = ''.join(line)
+            for key, license in licenses.items():
+                # Is it the license we are looking for?
+                idx = line.find(license)
+                if idx != -1:  # License was found
+                    idx += len(license) + 1
+                    while line[idx] == ' ':
+                        idx += 1
+                    if line[idx] == 'L':  # Is the license valid?
+                        licenses_status[key] = 'Licensed'
+                    else:
+                        licenses_status[key] = 'Not Licensed'
+                    remaining_licenses -= 1
 
         cont += 1
         if cont >= timeout:
@@ -64,6 +80,10 @@ def search_licenses(timeout):
             if chr(c) == '>':
                 cont = timeout
                 break
+        if credentials[host]['version'] == '6':
+            line = ''.join(line)
+            if line.endswith('--MORE--'):
+                channel.send('\n')
         time.sleep(1)
 
     return licenses_status
@@ -108,7 +128,8 @@ for host in credentials.keys():
         channel = client.invoke_shell()
         wait_prompt(30)
 
-        licenses_status[host] = search_licenses(30)
+        channel.send('show status\n')
+        licenses_status[host] = search_licenses(45)
 
         for key, license in licenses.items():
             print(license, '|', licenses_status.get(host).get(key))
