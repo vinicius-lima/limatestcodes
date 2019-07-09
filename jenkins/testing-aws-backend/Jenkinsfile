@@ -1,0 +1,34 @@
+pipeline {
+    agent {
+        docker {
+            image 'aws-sam-cli:latest'
+            args '-e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY'
+        }
+    }
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('jenkins-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws-secret-key')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'sam build'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo "sam local invoke -e {"some": "event"}"'
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh 'sam package --output-template-file packaged.yaml --s3-bucket vbslima-pipeline-artifacts'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'sam deploy --template-file packaged.yaml --stack-name testing-backend --capabilities CAPABILITY_IAM --region us-east-1'
+            }
+        }
+    }
+}

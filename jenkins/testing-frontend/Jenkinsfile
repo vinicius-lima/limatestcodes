@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps{
+                sh './scripts/build.sh'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo "Testing..."'
+            }
+        }
+        stage('Deliver') {
+            steps {
+                withAWS(region:'us-east-1', credentials:'awsJenkinsUser') {
+                    s3Upload(
+                        bucket:'vbslima-pipeline-artifacts',
+                        file: 'dist/testing-frontend.tar.gz',
+                        path:'testing-frontend/testing-frontend.tar.gz'
+                    );
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts 'dist/testing-frontend.tar.gz'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Push it to S3 static site bucket"'
+            }
+        }
+    }
+}

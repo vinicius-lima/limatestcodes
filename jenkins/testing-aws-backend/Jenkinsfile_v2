@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+    stages {
+        stage('Deploy') {
+            steps {
+                samDeploy([
+                    credentialsId: 'awsJenkinsUser',
+                    region: 'us-east-1',
+                    s3Bucket: 'vbslima-pipeline-artifacts',
+                    s3Prefix: 'testing-backend',
+                    stackName: 'testing-backend',
+                    templateFile: 'template.yaml',
+                    outputTemplateFile: 'packaged.yaml'
+                ])
+            }
+        }
+    }
+}

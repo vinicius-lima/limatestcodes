@@ -1,0 +1,37 @@
+pipeline {
+    agent {
+        docker {
+            image 'node:10.13.0-alpine'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+                sh 'npm run ng build'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo "npm run ng test"'
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh 'sh package.sh'
+                withAWS(region:'us-east-1', credentials:'awsJenkinsUser') {
+                    s3Upload(
+                        bucket:'vbslima-pipeline-artifacts',
+                        file:'dist/aws-environment-management.tar.gz',
+                        path:'ec2-mgnt-front/aws-environment-management.tar.gz'
+                    );
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Push it to S3 static site bucket"'
+            }
+        }
+    }
+}
