@@ -1,0 +1,22 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: somePass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  drupal:
+    image: drupal
+    ports:
+      - 8080:80
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=somePass
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

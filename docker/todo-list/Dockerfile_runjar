@@ -1,0 +1,4 @@
+FROM openjdk:8-jre-slim
+VOLUME /usr/src/app
+WORKDIR /usr/src/app
+ENTRYPOINT ["java", "-jar"]

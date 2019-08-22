@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  grafana:
+    image: grafana/grafana:6.3.0
+    user: root
+    ports:
+      - "3000:3000"
+    networks:
+      - cicd_pipeline
+    volumes:
+      - "grafana_storage:/var/lib/grafana"
+    secrets:
+      - admin_password
+    environment: 
+      GF_SERVER_ROOT_URL: http://192.168.1.197
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/admin_password
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: any
+
+volumes:
+  grafana_storage:
+
+secrets:
+  admin_password:
+    file: ./grafana_password.txt
+
+networks:
+  cicd_pipeline:
+    external: true
+    name: cicd_pipeline

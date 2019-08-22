@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  jenkins:
+    image: jenkinsci/blueocean
+    user: root
+    ports:
+      - "8080:8080"
+    networks:
+      - cicd_pipeline
+    volumes:
+      - "jenkins_home:/var/jenkins_home"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/home/infomach:/home"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: any
+
+volumes:
+  jenkins_home:
+
+networks:
+  cicd_pipeline:
+    external: true
+    name: cicd_pipeline

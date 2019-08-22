@@ -1,0 +1,26 @@
+version: "3.7"
+
+services: 
+  registry:
+    image: registry:2.7.1
+    ports: 
+      - "5000:5000"
+    networks: 
+      - cicd_pipeline
+    volumes: 
+      - "images:/var/lib/registry"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  
+volumes:
+  images:
+
+networks: 
+  cicd_pipeline:
+    external: true
+    name: cicd_pipeline

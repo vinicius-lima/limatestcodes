@@ -1,0 +1,25 @@
+version: '3.7'
+
+services: 
+  mongo:
+    image: mongo:4.0.10
+    networks: 
+      - mongo-network
+    environment: 
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: infomach
+  
+  mongo-express:
+    image: mongo-express:0.49.0
+    ports:
+      - 8080:8081
+    networks: 
+      - mongo-network
+    environment: 
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: infomach
+
+networks: 
+  mongo-network:
+    driver: bridge
+    name: mongo-network
